@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import prismaClient from "../prisma/prismaInstance";
+import allowCors from "../helper/allowCors";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+const handler = async (req: VercelRequest, res: VercelResponse) => {
   res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -39,4 +40,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.status(500).json(error);
     }
   }
-}
+};
+
+export default allowCors(handler);
