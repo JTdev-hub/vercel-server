@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+        
+model Customers{
+  id              Int     @id @default(autoincrement())
+  customerName    String?
+  customerSite    String?
+  customerContact String?
+  assetHeaders    AssetHeader[] //One-to-many relationship to AssetHeader
+}
+
+model AssetHeader{
+  id                Int @id @default(autoincrement())
+  customerId        Int // Foreign key referencing Customers model
+  assetNumber       String?
+  assetDescription  String?
+  assetSerialNo     String?
+  siteSection       String?
+  assetItems        AssetItems[]
+
+  customer Customers @relation(fields: [customerId], references: [id]) // Foreign Key relationship
+}
+
+model AssetItems{
+  id Int @id @default(autoincrement())
+  assetHeaderId Int // Foreign key referencing AssetHeader
+  duty String?
+  specification String?
+  valveType String?
+  valveSize String?
+  model String?
+  actuation String?
+  actuationType String?
+  flangeConnection String?
+  instrumentation String?
+  oemPartNumber String?
+  ansi String?
+  generalNotes String?
+  images String? 
+
+  assetHeader AssetHeader @relation(fields: [assetHeaderId], references: [id])
+}
