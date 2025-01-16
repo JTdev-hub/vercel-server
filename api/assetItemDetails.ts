@@ -3,12 +3,6 @@ import prismaClient from "../prisma/prismaInstance";
 import allowCors from "../helper/allowCors";
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  ); // Allowed HTTP methods
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "GET") {
     try {
       const { id } = req.query;

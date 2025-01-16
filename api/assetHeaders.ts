@@ -3,15 +3,21 @@ import prismaClient from "../prisma/prismaInstance";
 import allowCors from "../helper/allowCors";
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  ); // Allowed HTTP methods
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "GET") {
     try {
-      const assetHeaders = await prismaClient.assetHeader.findMany();
+      const { customerName } = req.query;
+      const assetHeaders = await prismaClient.assetHeader.findMany({
+        where: {
+          customer: {
+            customerName: {
+              contains: customerName as string,
+            },
+          },
+        },
+        include: {
+          customer: true,
+        },
+      });
       res.status(200).json(assetHeaders);
     } catch (error) {
       res.status(500).json(error);
@@ -35,7 +41,16 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
         },
       });
 
-      res.status(200).json(newAssetHeader);
+      const savedAssetHeader = await prismaClient.assetHeader.findUnique({
+        where: {
+          id: newAssetHeader.id,
+        },
+        include: {
+          customer: true,
+        },
+      });
+
+      res.status(200).json(savedAssetHeader);
     } catch (error) {
       res.status(500).json(error);
     }

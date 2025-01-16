@@ -4,12 +4,6 @@ import prismaClient from "../prisma/prismaInstance";
 import allowCors from "../helper/allowCors";
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  ); // Allowed HTTP methods
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "GET") {
     try {
       const assetItems = await prismaClient.assetItems.findMany({});
@@ -57,6 +51,25 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
       });
       res.status(200).json(newAssetItems);
     } catch (error) {
+      res.status(500).json(error);
+    }
+  } else if (req.method === "PATCH") {
+    try {
+      const { id } = req.query;
+
+      console.log(req.body);
+
+      const updatedAssetItems = await prismaClient.assetItems.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          images: req.body,
+        },
+      });
+      res.status(200).json(updatedAssetItems);
+    } catch (error) {
+      console.log(error);
       res.status(500).json(error);
     }
   }
