@@ -12,9 +12,31 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
 
   if (req.method === "GET") {
     try {
-      const { id } = req.query;
+      const { id, dataQuery } = req.query;
       const customers = await prismaClient.customers.findMany({
-        where: id ? { id: Number(id) } : undefined,
+        where: {
+          AND: [
+            id ? { id: Number(id) } : {}, // Include `id` filter only if it's provided
+            {
+              OR: dataQuery
+                ? [
+                    {
+                      customerName: {
+                        contains: dataQuery as string,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      customerSite: {
+                        contains: dataQuery as string,
+                        mode: "insensitive",
+                      },
+                    },
+                  ]
+                : undefined, // Include `OR` filter only if `customerQuery` is provided
+            },
+          ],
+        },
       });
 
       res.status(200).json(customers);
