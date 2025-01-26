@@ -2,14 +2,13 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import prismaClient from "../prisma/prismaInstance";
 import allowCors from "../helper/allowCors";
 
-const handler = async (req: VercelRequest, res: VercelResponse) => {
-  // res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
-  // res.setHeader(
-  //   "Access-Control-Allow-Methods",
-  //   "GET, POST, PUT, DELETE, OPTIONS"
-  // ); // Allowed HTTP methods
-  // res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+interface Customer {
+  customerName: string;
+  customerContact: string;
+  customerSite: string;
+}
 
+const handler = async (req: VercelRequest, res: VercelResponse) => {
   if (req.method === "GET") {
     try {
       const { id, dataQuery } = req.query;
@@ -45,11 +44,15 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     }
   } else if (req.method === "POST") {
     try {
-      const { customerName, customerSite, customerContact } = req.body;
-      const newCustomer = await prismaClient.customers.create({
-        data: { customerName, customerSite, customerContact },
-      });
-      res.status(200).json(newCustomer);
+      const customers: Customer[] = req.body;
+      const newCustomers = await Promise.all(
+        customers.map(({ customerName, customerSite, customerContact }) =>
+          prismaClient.customers.create({
+            data: { customerName, customerSite, customerContact },
+          })
+        )
+      );
+      res.status(200).json(newCustomers);
     } catch (error) {
       console.log(error);
       res.status(500).json(error);
