@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import prismaClient from "../prisma/prismaInstance";
 import allowCors from "../helper/allowCors";
+import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
   if (req.method === "GET") {
@@ -26,7 +28,7 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
 
       res.status(200).json(assetHeaders);
     } catch (error) {
-      res.status(500).json(error);
+      res.status(500).json({ message: "Internal server error.", error });
     }
   } else if (req.method === "POST") {
     try {
@@ -37,6 +39,8 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
         assetSerialNo,
         siteSection,
       } = req.body;
+
+      // Attempt to create a new AssetHeader
       const newAssetHeader = await prismaClient.assetHeader.create({
         data: {
           customerId,
@@ -47,6 +51,7 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
         },
       });
 
+      // Fetch the newly created AssetHeader with customer details
       const savedAssetHeader = await prismaClient.assetHeader.findUnique({
         where: {
           id: newAssetHeader.id,
@@ -58,7 +63,14 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
 
       res.status(200).json(savedAssetHeader);
     } catch (error) {
-      res.status(500).json(error);
+      // Handle unique constraint violation
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          res.status(409).json("Asset Header is already existing");
+        } else {
+          res.status(500).json(error);
+        }
+      }
     }
   }
 };

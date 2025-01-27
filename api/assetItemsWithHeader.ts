@@ -12,11 +12,16 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "GET") {
     try {
-      const { id, dataQuery } = req.query;
+      const { id, assetHeaderId, dataQuery } = req.query;
+
+      // If both id and assetHeaderId are provided, query using the composite unique key
+
+      // If id and assetHeaderId are not provided, perform a general search
       const assetItems = await prismaClient.assetItems.findMany({
         where: {
           AND: [
-            id ? { id: Number(id) } : {}, // Include `id` filter only if it's provided
+            id ? { id: Number(id) } : {},
+            assetHeaderId ? { assetHeaderId: Number(assetHeaderId) } : {},
             {
               OR: dataQuery
                 ? [
@@ -95,7 +100,7 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
                       },
                     },
                   ]
-                : undefined, // Include `OR` filter only if `customerQuery` is provided
+                : undefined,
             },
           ],
         },
@@ -125,7 +130,8 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
 
       res.status(200).json(assetItems);
     } catch (error) {
-      res.status(500).json(error);
+      console.error("Error in GET handler:", error);
+      res.status(500).json({ message: "Internal server error.", error: error });
     }
   }
 };

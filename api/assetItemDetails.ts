@@ -5,9 +5,14 @@ import allowCors from "../helper/allowCors";
 const handler = async (req: VercelRequest, res: VercelResponse) => {
   if (req.method === "GET") {
     try {
-      const { id } = req.query;
-      const assetItems = await prismaClient.assetItems.findMany({
-        where: id ? { id: Number(id) } : undefined,
+      const { id, assetHeaderId } = req.query;
+      const assetItems = await prismaClient.assetItems.findUnique({
+        where: {
+          id_assetHeaderId: {
+            id: Number(id),
+            assetHeaderId: Number(assetHeaderId),
+          },
+        },
         select: {
           id: true,
           assetHeaderId: true,

@@ -23,7 +23,7 @@ model Customers{
 model AssetHeader{
   id                Int @id @default(autoincrement())
   customerId        Int // Foreign key referencing Customers model
-  assetNumber       String?
+  assetNumber       String? @unique
   assetDescription  String?
   assetSerialNo     String?
   siteSection       String?
@@ -33,8 +33,8 @@ model AssetHeader{
 }
 
 model AssetItems{
-  id Int @id @default(autoincrement())
-  assetHeaderId Int // Foreign key referencing AssetHeader
+  id Int
+  assetHeaderId Int// Foreign key referencing AssetHeader 
   duty String?
   specification String?
   valveType String?
@@ -50,4 +50,7 @@ model AssetItems{
   images String? 
 
   assetHeader AssetHeader @relation(fields: [assetHeaderId], references: [id])
+
+   // Composite unique key on id and assetHeaderId
+  @@id(name: "id_assetHeaderId", [id, assetHeaderId])
 }

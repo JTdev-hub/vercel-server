@@ -31,8 +31,19 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
         images,
       } = req.body;
 
+      const itemCount = await prismaClient.assetItems.count({
+        where: {
+          assetHeaderId: {
+            equals: assetHeaderId,
+          },
+        },
+      });
+
+      const newItemId = itemCount + 1;
+
       const newAssetItems = await prismaClient.assetItems.create({
         data: {
+          id: newItemId,
           assetHeaderId,
           duty,
           specification,
@@ -49,19 +60,55 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
           images,
         },
       });
-      res.status(200).json(newAssetItems);
+
+      const assetItems = await prismaClient.assetItems.findUnique({
+        where: {
+          id_assetHeaderId: {
+            id: Number(newItemId),
+            assetHeaderId: Number(assetHeaderId),
+          },
+        },
+        select: {
+          id: true,
+          assetHeaderId: true,
+          duty: true,
+          specification: true,
+          valveType: true,
+          valveSize: true,
+          model: true,
+          actuation: true,
+          actuationType: true,
+          flangeConnection: true,
+          instrumentation: true,
+          oemPartNumber: true,
+          ansi: true,
+          generalNotes: true,
+          images: true,
+          assetHeader: {
+            select: {
+              id: true,
+              assetNumber: true,
+            },
+          },
+        },
+      });
+
+      res.status(200).json(assetItems);
     } catch (error) {
       res.status(500).json(error);
     }
   } else if (req.method === "PATCH") {
     try {
-      const { id } = req.query;
+      const { id, assetHeaderId } = req.query;
 
       console.log(req.body);
 
       const updatedAssetItems = await prismaClient.assetItems.update({
         where: {
-          id: Number(id),
+          id_assetHeaderId: {
+            id: Number(id),
+            assetHeaderId: Number(assetHeaderId),
+          },
         },
         data: {
           images: req.body,
